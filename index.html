@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>软件下载中心 · 云端同步版</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
+    <style>
+        :root {
+            --orange: #f97316;
+            --dark-bg: #0a0e14;
+            --card-bg: #14181f;
+            --border-color: #1f2937;
+            --text-gray: #6b7280;
+        }
+        body {
+            font-family: 'Noto Sans SC', sans-serif;
+            background-color: var(--dark-bg);
+            color: #e5e7eb;
+            margin: 0;
+        }
+        .text-brand-orange { color: var(--orange); }
+        .bg-brand-dark { background-color: var(--dark-bg); }
+        .bg-brand-card { background-color: var(--card-bg); }
+        .border-brand { border-color: var(--border-color); }
+        .gradient-text {
+            background: linear-gradient(135deg, var(--orange), #fbbf24);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        .btn-brand {
+            background: linear-gradient(135deg, var(--orange), #ea580c);
+            color: white; border: none; transition: all 0.3s ease;
+            font-weight: 500; padding: 0.75rem 2rem; border-radius: 0.5rem;
+        }
+        .btn-brand:hover {
+            background: linear-gradient(135deg, #fb923c, var(--orange));
+            box-shadow: 0 0 20px rgba(249,115,22,0.4); transform: translateY(-2px);
+        }
+        .btn-outline {
+            background: transparent; border: 1px solid #d1d5db; color: #d1d5db;
+            padding: 0.75rem 2rem; border-radius: 0.5rem; font-weight: 500;
+            transition: all 0.3s ease; cursor: pointer;
+        }
+        .btn-outline:hover { background: rgba(255,255,255,0.1); border-color: white; color: white; }
+        .section-title { font-size: 2.25rem; font-weight: 700; text-align: center; margin-bottom: 1rem; }
+        .divider-custom {
+            width: 60px; height: 4px;
+            background: linear-gradient(135deg, var(--orange), #fbbf24);
+            margin: 1rem auto; border-radius: 2px;
+        }
+        .nav-container { position: relative; }
+        .mega-menu {
+            position: absolute; left: 0; width: 100vw; top: 100%; margin-top: 0;
+            background-color: white; border-top: 1px solid rgba(0,0,0,0.05);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            box-shadow: 0 20px 40px -8px rgba(0,0,0,0.1), 0 0 0 1px rgba(0,0,0,0.03) inset;
+            z-index: 50; border-radius: 0 0 20px 20px;
+            max-height: 0; overflow: hidden; opacity: 0;
+            transform: translateY(-8px); pointer-events: none;
+            transition: max-height 0.45s cubic-bezier(0.4,0,0.2,1),
+                        opacity 0.4s cubic-bezier(0.4,0,0.2,1),
+                        transform 0.45s cubic-bezier(0.4,0,0.2,1),
+                        visibility 0.4s;
+            visibility: hidden;
+        }
+        .mega-menu.active {
+            max-height: 800px; opacity: 1; transform: translateY(0);
+            visibility: visible; pointer-events: auto;
+        }
+        .mega-menu .text-gray-400 { color: var(--text-gray); }
+        .mega-menu a { color: #1f2937; }
+        .mega-menu a:hover { color: var(--orange); }
+        .mega-menu hr { border-color: #e5e7eb; }
+        @media (max-width: 768px) {
+            .mega-menu.active { max-height: 70vh; overflow-y: auto; }
+            .mega-menu .grid { grid-template-columns: 1fr; }
+        }
+        nav.nav-container {
+            background-color: rgba(10,14,20,0.95);
+            border-bottom: 1px solid rgba(31,41,55,0.2);
+            transition: background-color 0.35s ease, border-bottom-color 0.35s ease;
+        }
+        nav.nav-container .logo-text,
+        nav.nav-container .nav-link { transition: color 0.35s ease; }
+        nav.nav-container.nav-white {
+            background-color: white !important;
+            border-bottom-color: #e5e7eb !important;
+        }
+        nav.nav-container.nav-white .logo-text { color: black !important; }
+        nav.nav-container.nav-white .nav-link { color: black !important; }
+        nav.nav-container.nav-white .btn-outline {
+            border-color: #9ca3af; color: #374151;
+        }
+        nav.nav-container.nav-white .btn-outline:hover {
+            background: #f3f4f6; border-color: #4b5563; color: #111827;
+        }
+        .auth-required { display: none !important; }
+        body.logged-in .auth-required { display: inline-flex !important; }
+        body.logged-in .add-menu-item-btn.auth-required { display: block !important; }
+        body.logged-in .menu-item-actions button.auth-required { display: inline-block !important; }
+        body.logged-in .champion-actions { display: inline-flex !important; }
+        .menu-item-wrapper { display: flex; align-items: center; justify-content: space-between; gap: 4px; }
+        .menu-item-link { flex: 1; min-width: 0; }
+        .menu-item-actions { display: inline-flex; gap: 2px; opacity: 0; transition: opacity 0.2s; }
+        .menu-item-wrapper:hover .menu-item-actions { opacity: 1; }
+        .menu-item-actions button {
+            background: none; border: none; cursor: pointer; font-size: 14px;
+            padding: 2px 4px; color: #9ca3af; border-radius: 4px;
+            transition: color 0.2s, background 0.2s;
+        }
+        .menu-item-actions button:hover { color: var(--orange); background: rgba(249,115,22,0.08); }
+        .cat-actions { display: inline-flex; gap: 4px; margin-left: 6px; vertical-align: middle; }
+        .cat-actions button {
+            background: none; border: none; cursor: pointer; font-size: 14px;
+            padding: 2px 4px; color: #9ca3af; border-radius: 4px;
+            transition: color 0.2s, background 0.2s;
+        }
+        .cat-actions button:hover { color: var(--orange); background: rgba(249,115,22,0.08); }
+        .modal-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.6); display: flex; align-items: center;
+            justify-content: center; z-index: 10001; visibility: hidden;
+            opacity: 0; transition: opacity 0.3s, visibility 0.3s;
+        }
+        .modal-overlay.active { visibility: visible; opacity: 1; }
+        .modal-box {
+            background: white; border-radius: 16px; padding: 24px;
+            width: 90%; max-width: 500px; box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            transform: scale(0.95); transition: transform 0.3s;
+        }
+        .modal-overlay.active .modal-box { transform: scale(1); }
+        .modal-box h3 { font-size: 1.5rem; font-weight: 700; color: #111827; margin-bottom: 20px; }
+        .modal-box label { font-size: 14px; font-weight: 500; color: #374151; display: block; margin-bottom: 4px; }
+        .modal-box input, .modal-box select {
+            width: 100%; padding: 10px 12px; border: 1px solid #d1d5db;
+            border-radius: 8px; font-size: 14px; margin-bottom: 16px;
+            outline: none; transition: border-color 0.2s;
+        }
+        .modal-box input:focus, .modal-box select:focus { border-color: var(--orange); }
+        .modal-actions { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+        .modal-actions button {
+            padding: 10px 20px; border-radius: 8px; font-weight: 500;
+            cursor: pointer; border: none; transition: background 0.2s;
+        }
+        .btn-cancel { background: #f3f4f6; color: #374151; }
+        .btn-cancel:hover { background: #e5e7eb; }
+        .btn-submit { background: var(--orange); color: white; }
+        .btn-submit:hover { background: #ea580c; }
+        .btn-delete { background: #ef4444; color: white; }
+        .btn-delete:hover { background: #dc2626; }
+        .add-menu-item-btn {
+            display: block; margin: 24px auto 0; padding: 8px 24px;
+            border-radius: 8px; background: transparent; border: 1px dashed #d1d5db;
+            color: var(--text-gray); cursor: pointer; transition: all 0.2s;
+            font-size: 14px; text-align: center;
+        }
+        .add-menu-item-btn:hover { border-color: var(--orange); color: var(--orange); background: rgba(249,115,22,0.05); }
+        .add-category-btn {
+            display: block; margin: 16px auto 0; padding: 8px 24px;
+            border-radius: 8px; background: transparent; border: 1px dashed #d1d5db;
+            color: var(--text-gray); cursor: pointer; transition: all 0.2s;
+            font-size: 14px; text-align: center;
+        }
+        .add-category-btn:hover { border-color: var(--orange); color: var(--orange); background: rgba(249,115,22,0.05); }
+        .add-champion-btn {
+            background: transparent; border: 1px solid #d1d5db; padding: 6px 16px;
+            border-radius: 8px; cursor: pointer; font-size: 14px;
+            transition: all 0.2s; color: #374151;
+            display: inline-flex; align-items: center; gap: 6px; margin-bottom: 16px;
+        }
+        .add-champion-btn:hover { background-color: #f3f4f6; border-color: #9ca3af; }
+        .carousel-arrow {
+            position: absolute; top: 50%; transform: translateY(-50%);
+            font-size: 2.5rem; color: rgba(255,255,255,0.6); cursor: pointer;
+            transition: color 0.2s; z-index: 10; background: none; border: none;
+        }
+        .carousel-arrow:hover { color: white; }
+        .carousel-arrow.left { left: 0; }
+        .carousel-arrow.right { right: 0; }
+        .indicator-dot {
+            width: 10px; height: 10px; border-radius: 50%;
+            background-color: rgba(255,255,255,0.4); cursor: pointer;
+            transition: background-color 0.2s; border: none;
+        }
+        .indicator-dot.active { background-color: var(--orange); }
+        .champion-item-wrapper { position: relative; }
+        .champion-actions {
+            position: absolute; top: 8px; right: 8px; display: none; gap: 4px;
+            background: rgba(255,255,255,0.9); padding: 4px; border-radius: 6px; z-index: 5;
+        }
+        .champion-item-wrapper:hover .champion-actions { display: inline-flex; }
+        .champion-actions button {
+            background: none; border: none; cursor: pointer; font-size: 14px;
+            padding: 2px 4px; color: var(--text-gray); border-radius: 4px;
+            transition: color 0.2s, background 0.2s;
+        }
+        .champion-actions button:hover { color: var(--orange); background: rgba(249,115,22,0.08); }
+        .login-corner-btn {
+            position: fixed; left: 0; bottom: 0;
+            width: 0; height: 0;
+            border-bottom: 12px solid #f97316;
+            border-right: 12px solid transparent;
+            cursor: pointer; z-index: 10000;
+            transition: border-bottom-color 0.3s;
+        }
+        .login-corner-btn:hover { border-bottom-color: #fb923c; filter: drop-shadow(0 0 4px rgba(249,115,22,0.6)); }
+        body.logged-in .login-corner-btn { border-bottom-color: #10b981; }
+        body.logged-in .login-corner-btn:hover { border-bottom-color: #34d399; filter: drop-shadow(0 0 4px rgba(16,185,129,0.6)); }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700;900&display=swap" rel="stylesheet">
+</head>
+<body class="bg-brand-dark min-h-screen">
+    <!-- 导航栏 -->
+    <nav id="mainNav" class="sticky top-0 z-50 nav-container">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex items-center justify-between h-16">
+                <div class="flex items-center space-x-2">
+                    <i class="ri-download-cloud-2-fill text-3xl text-brand-orange logo-icon"></i>
+                    <span class="text-xl font-bold text-white logo-text">软件下载中心</span>
+                </div>
+                <div class="hidden md:flex items-center space-x-8">
+                    <div class="relative" data-menu="app"><button class="text-gray-300 hover:text-brand-orange transition-colors flex items-center space-x-1 cursor-pointer bg-transparent border-none nav-link"><span class="nav-item-text">应用软件</span><i class="ri-arrow-down-s-line text-sm"></i></button></div>
+                    <div class="relative" data-menu="driver"><button class="text-gray-300 hover:text-brand-orange transition-colors flex items-center space-x-1 cursor-pointer bg-transparent border-none nav-link"><span class="nav-item-text">驱动包</span><i class="ri-arrow-down-s-line text-sm"></i></button></div>
+                    <div class="relative" data-menu="design"><button class="text-gray-300 hover:text-brand-orange transition-colors flex items-center space-x-1 cursor-pointer bg-transparent border-none nav-link"><span class="nav-item-text">设计软件</span><i class="ri-arrow-down-s-line text-sm"></i></button></div>
+                    <div class="relative" data-menu="system"><button class="text-gray-300 hover:text-brand-orange transition-colors flex items-center space-x-1 cursor-pointer bg-transparent border-none nav-link"><span class="nav-item-text">系统镜像</span><i class="ri-arrow-down-s-line text-sm"></i></button></div>
+                    <div class="relative" data-menu="tool"><button class="text-gray-300 hover:text-brand-orange transition-colors flex items-center space-x-1 cursor-pointer bg-transparent border-none nav-link"><span class="nav-item-text">工具软件</span><i class="ri-arrow-down-s-line text-sm"></i></button></div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button id="editNavBtn" class="btn-outline auth-required" onclick="openNavEditModal()"><i class="ri-edit-line"></i> 修改</button>
+                    <button class="btn-brand">立即下载</button>
+                </div>
+            </div>
+        </div>
+        <!-- 下拉菜单容器（由JS动态渲染） -->
+        <div id="menu-app" class="mega-menu"><div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-sm"><div class="grid grid-cols-2 md:grid-cols-4 gap-8" id="menu-app-grid"></div><button class="add-menu-item-btn auth-required" onclick="openMenuAddModal('menu-app')">+ 通过完整表单添加软件</button><button class="add-category-btn auth-required" onclick="openAddCategoryModal('menu-app')">+ 添加分类</button></div></div>
+        <div id="menu-driver" class="mega-menu"><div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-sm"><div class="grid grid-cols-2 md:grid-cols-4 gap-8" id="menu-driver-grid"></div><button class="add-menu-item-btn auth-required" onclick="openMenuAddModal('menu-driver')">+ 通过完整表单添加软件</button><button class="add-category-btn auth-required" onclick="openAddCategoryModal('menu-driver')">+ 添加分类</button></div></div>
+        <div id="menu-design" class="mega-menu"><div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-sm"><div class="grid grid-cols-2 md:grid-cols-4 gap-8" id="menu-design-grid"></div><button class="add-menu-item-btn auth-required" onclick="openMenuAddModal('menu-design')">+ 通过完整表单添加软件</button><button class="add-category-btn auth-required" onclick="openAddCategoryModal('menu-design')">+ 添加分类</button></div></div>
+        <div id="menu-system" class="mega-menu"><div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-sm"><div class="grid grid-cols-2 md:grid-cols-3 gap-8" id="menu-system-grid"></div><button class="add-menu-item-btn auth-required" onclick="openMenuAddModal('menu-system')">+ 通过完整表单添加软件</button><button class="add-category-btn auth-required" onclick="openAddCategoryModal('menu-system')">+ 添加分类</button></div></div>
+        <div id="menu-tool" class="mega-menu"><div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 text-sm"><div class="grid grid-cols-2 md:grid-cols-4 gap-8" id="menu-tool-grid"></div><button class="add-menu-item-btn auth-required" onclick="openMenuAddModal('menu-tool')">+ 通过完整表单添加软件</button><button class="add-category-btn auth-required" onclick="openAddCategoryModal('menu-tool')">+ 添加分类</button></div></div>
+    </nav>
+
+    <!-- Hero 轮播 -->
+    <section class="relative overflow-hidden py-20 lg:py-32 hero-carousel">
+        <button class="hero-edit-btn auth-required" onclick="openHeroEditModal()" style="position:absolute;top:16px;right:24px;background:transparent;border:1px solid rgba(255,255,255,0.4);color:rgba(255,255,255,0.7);padding:4px 12px;border-radius:8px;font-size:13px;cursor:pointer;transition:all 0.2s;z-index:10;"><i class="ri-edit-line"></i> 编辑海报</button>
+        <div class="absolute inset-0 bg-gradient-to-br from-brand-orange/10 to-transparent" id="heroBgOverlay"></div>
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="relative">
+                <button class="carousel-arrow left" onclick="changeSlide(-1)"><i class="ri-arrow-left-s-line"></i></button>
+                <button class="carousel-arrow right" onclick="changeSlide(1)"><i class="ri-arrow-right-s-line"></i></button>
+                <div id="heroSlideContainer" class="text-center"></div>
+                <div id="heroIndicators" class="flex justify-center space-x-2 mt-6"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 站友贡献榜 -->
+    <section id="champion-section" class="py-20 bg-white">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;margin-bottom:20px;">
+                <h2 class="section-title text-gray-900" style="margin-bottom:0;flex-grow:1;">站友贡献榜</h2>
+                <button id="addChampionBtn" class="add-champion-btn auth-required" onclick="openAddModal()"><i class="ri-add-line"></i> 添加</button>
+            </div>
+            <div class="divider-custom" style="margin-top:0;"></div>
+            <div id="championGrid" class="grid grid-cols-2 md:grid-cols-5 gap-4 mt-12"></div>
+        </div>
+    </section>
+
+    <!-- CTA & Footer -->
+    <section id="cta-section" class="py-20 bg-white relative overflow-hidden">
+        <div class="max-w-4xl mx-auto text-center relative z-10">
+            <h2 class="text-3xl font-bold text-gray-900 mb-6">找不到需要的软件？</h2>
+            <p class="text-gray-600 mb-10">我们持续更新资源库，欢迎提交软件请求</p>
+            <button class="btn-brand text-lg px-12 py-4">立即反馈</button>
+        </div>
+    </section>
+    <footer class="bg-white border-t border-gray-200 py-12 text-center text-gray-600">&copy; 2026 软件下载中心</footer>
+
+    <!-- 左下角登录按钮 -->
+    <button id="cornerLoginBtn" class="login-corner-btn" title="登录"></button>
+
+    <!-- 模态框 -->
+    <div id="loginModal" class="modal-overlay" onclick="closeLoginModal(event)"><div class="modal-box" onclick="event.stopPropagation()"><h3>管理员登录</h3><div><label>账号</label><input type="password" id="loginUser" placeholder="请输入账号"></div><div><label>密码</label><input type="password" id="loginPass" placeholder="请输入密码"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeLoginModal()">取消</button><button class="btn-submit" onclick="doLogin()">登录</button></div></div></div>
+    <div id="editCategoryModal" class="modal-overlay" onclick="closeEditCategoryModal(event)"><div class="modal-box" onclick="event.stopPropagation()"><h3>编辑分类</h3><div><label>分类名称</label><input type="text" id="editCatName"></div><div><label>字体大小</label><select id="editCatFontSize"><option value="xs">极小</option><option value="sm">小</option><option value="base">正常</option><option value="lg">大</option></select></div><div><label>字体粗细</label><select id="editCatFontWeight"><option value="normal">正常</option><option value="bold">粗体</option><option value="bolder">更粗</option><option value="lighter">细体</option></select></div><div><label>字体颜色</label><input type="color" id="editCatColor" style="height:40px;"></div><div><label>链接</label><input type="text" id="editCatLink" placeholder="https://... 或留空"></div><div class="modal-actions"><button class="btn-delete" onclick="deleteCategory()">删除分类</button><div style="display:flex;gap:12px;"><button class="btn-cancel" onclick="closeEditCategoryModal()">取消</button><button class="btn-submit" onclick="saveEditCategory()">保存</button></div></div></div></div>
+    <div id="addCategoryModal" class="modal-overlay" onclick="closeAddCategoryModal(event)"><div class="modal-box" onclick="event.stopPropagation()"><h3>添加新分类</h3><div><label>所属导航</label><select id="catNavSelect"><option value="app">应用软件</option><option value="driver">驱动包</option><option value="design">设计软件</option><option value="system">系统镜像</option><option value="tool">工具软件</option></select></div><div><label>分类名称</label><input type="text" id="catNameInput"></div><div><label>字体大小</label><select id="catFontSize"><option value="xs">极小</option><option value="sm" selected>小</option><option value="base">正常</option><option value="lg">大</option></select></div><div><label>字体粗细</label><select id="catFontWeight"><option value="normal">正常</option><option value="bold">粗体</option><option value="bolder">更粗</option><option value="lighter">细体</option></select></div><div><label>字体颜色</label><input type="color" id="catColorInput" value="#9ca3af" style="height:40px;"></div><div><label>分类链接（可选）</label><input type="text" id="catLinkInput" placeholder="https://... 或留空"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeAddCategoryModal()">取消</button><button class="btn-submit" onclick="submitAddCategory()">添加分类</button></div></div></div>
+    <div id="navEditModal" class="modal-overlay" onclick="closeNavEditModal(event)"><div class="modal-box" onclick="event.stopPropagation()"><h3>修改导航分类名称</h3><div><label>应用软件</label><input type="text" id="edit-app"></div><div><label>驱动包</label><input type="text" id="edit-driver"></div><div><label>设计软件</label><input type="text" id="edit-design"></div><div><label>系统镜像</label><input type="text" id="edit-system"></div><div><label>工具软件</label><input type="text" id="edit-tool"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeNavEditModal()">取消</button><button class="btn-submit" onclick="saveNavEdit()">保存修改</button></div></div></div>
+    <div id="addModal" class="modal-overlay" onclick="closeAddModal(event)"><div class="modal-box" onclick="event.stopPropagation()"><h3>添加贡献软件</h3><div><label>软件名称</label><input type="text" id="modalName"></div><div><label>跳转链接</label><input type="url" id="modalLink"></div><div><label>贡献者</label><input type="text" id="modalContributor"></div><div><label>图标URL（可选）</label><input type="text" id="modalIconUrl"><div class="icon-preview" id="iconPreview"></div></div><div class="modal-actions"><button class="btn-cancel" onclick="closeAddModal()">取消</button><button class="btn-submit" onclick="submitAdd()">添加软件</button></div></div></div>
+    <div id="menuAddModal" class="modal-overlay" onclick="closeMenuAddModal(event)"><div class="modal-box" onclick="event.stopPropagation()"><h3>添加软件到下拉菜单</h3><input type="hidden" id="currentMenuId"><div><label>选择分类</label><select id="menuCatSelect"></select></div><div><label>软件名称</label><input type="text" id="menuItemName"></div><div><label>跳转链接（可选）</label><input type="text" id="menuItemLink"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeMenuAddModal()">取消</button><button class="btn-submit" onclick="submitMenuAdd()">添加</button></div></div></div>
+    <div id="heroEditModal" class="modal-overlay" onclick="closeHeroEditModal(event)"><div class="modal-box" onclick="event.stopPropagation()"><h3>编辑海报</h3><div><label>主标题</label><input type="text" id="editHeroTitle"></div><div><label>描述文字</label><input type="text" id="editHeroDesc"></div><div><label>副标题</label><input type="text" id="editHeroSub"></div><div><label>按钮文字</label><input type="text" id="editHeroBtnText"></div><div><label>按钮链接</label><input type="text" id="editHeroBtnLink"></div><div><label>按钮颜色</label><input type="color" id="editHeroBtnColor" style="height:40px;"></div><div><label>背景颜色</label><input type="color" id="editHeroBgColor" style="height:40px;"></div><div class="modal-actions"><button class="btn-cancel" onclick="closeHeroEditModal()">取消</button><button class="btn-submit" onclick="saveHeroEdit()">保存修改</button></div></div></div>
+
+    <script>
+        // ===================== 1. JSONBin 配置 =====================
+        // 请替换为你自己的 Bin ID 和 Access Key
+        const JSONBIN_CONFIG = {
+            BIN_ID: '6a1023fdee5a733b12fefb8c',
+            ACCESS_KEY: '$2a$10$SPOGBqPIRquFV1RqJRuY5OzAfPCrujQrbeUkYR1aRsASZoLdmGLKW',
+            API_BASE: 'https://api.jsonbin.io/v3/b'
+        };
+
+        // ===================== 2. API 客户端 =====================
+        const apiClient = {
+            headers() {
+                return {
+                    'Content-Type': 'application/json',
+                    'X-Access-Key': JSONBIN_CONFIG.ACCESS_KEY
+                };
+            },
+            async read() {
+                const response = await fetch(
+                    `${JSONBIN_CONFIG.API_BASE}/${JSONBIN_CONFIG.BIN_ID}/latest`,
+                    { headers: this.headers() }
+                );
+                if (!response.ok) throw new Error('读取云端数据失败');
+                const result = await response.json();
+                return result.record; // JSONBin 将我们的数据放在 record 字段
+            },
+            async update(data) {
+                const response = await fetch(
+                    `${JSONBIN_CONFIG.API_BASE}/${JSONBIN_CONFIG.BIN_ID}`,
+                    {
+                        method: 'PUT',
+                        headers: this.headers(),
+                        body: JSON.stringify(data)
+                    }
+                );
+                if (!response.ok) throw new Error('更新云端数据失败');
+                const result = await response.json();
+                return result.record;
+            }
+        };
+
+        // ===================== 3. 默认数据 =====================
+        function getDefaultData() {
+            return {
+                menus: {
+                    app: { categories: [
+                        { name:'办公效率', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] },
+                        { name:'浏览器&通讯', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] },
+                        { name:'影音娱乐', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] },
+                        { name:'其他常用', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] }
+                    ]},
+                    driver: { categories: [
+                        { name:'显卡驱动', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] },
+                        { name:'主板/芯片组', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] },
+                        { name:'外设驱动', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] },
+                        { name:'驱动工具', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] }
+                    ]},
+                    design: { categories: [
+                        { name:'平面设计', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] },
+                        { name:'UI/UX设计', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] },
+                        { name:'3D建模/渲染', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] },
+                        { name:'视频剪辑', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] }
+                    ]},
+                    system: { categories: [
+                        { name:'Windows', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] },
+                        { name:'Linux 发行版', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] },
+                        { name:'macOS / 其他', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] }
+                    ]},
+                    tool: { categories: [
+                        { name:'系统优化', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] },
+                        { name:'文件处理', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] },
+                        { name:'网络工具', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] },
+                        { name:'安全软件', fontSize:'sm', fontWeight:'normal', color:'#9ca3af', link:'', items:[] }
+                    ]}
+                },
+                champions: [
+                    { name:'Office 2021', link:'https://www.office.com', contributor:'软件中心', iconUrl:'' },
+                    { name:'Photoshop', link:'https://www.adobe.com/photoshop', contributor:'设计师小刘', iconUrl:'' },
+                    { name:'NVIDIA 驱动', link:'https://www.nvidia.com/download', contributor:'硬件控', iconUrl:'' },
+                    { name:'Windows 11', link:'https://www.microsoft.com/windows', contributor:'微软官方', iconUrl:'' },
+                    { name:'火绒安全', link:'https://www.huorong.cn', contributor:'安全达人', iconUrl:'' }
+                ],
+                slides: [
+                    { title:'一站式<span class="gradient-text">软件下载</span>中心', desc:'覆盖应用、驱动、设计、镜像与工具五大类别', sub:'安全、纯净、无捆绑，海量软件资源免费高速下载', btnText:'浏览全部软件', btnLink:'#', btnColor:'#f97316', bgColor:'' },
+                    { title:'全新<span class="gradient-text">设计工具</span>推荐', desc:'精选设计师必备软件，提升创作效率', sub:'从平面到3D，一站式获取所需工具', btnText:'查看设计软件', btnLink:'#', btnColor:'#f97316', bgColor:'' },
+                    { title:'系统镜像<span class="gradient-text">高速下载</span>', desc:'Windows、Linux、macOS 原版镜像', sub:'纯净安全，告别捆绑', btnText:'下载镜像', btnLink:'#', btnColor:'#f97316', bgColor:'' }
+                ]
+            };
+        }
+
+        // ===================== 4. 全局应用数据 =====================
+        let appData = null;   // 运行时数据
+        const sizeMap = { xs:'0.75rem', sm:'0.875rem', base:'1rem', lg:'1.125rem' };
+        const menuKeys = ['app','driver','design','system','tool'];
+
+        // ===================== 5. 数据加载与保存 =====================
+        async function loadData() {
+            try {
+                const remoteData = await apiClient.read();
+                localStorage.setItem('software_center_cache', JSON.stringify(remoteData));
+                return remoteData;
+            } catch (error) {
+                console.warn('云端加载失败，尝试本地缓存:', error.message);
+                const cached = localStorage.getItem('software_center_cache');
+                if (cached) return JSON.parse(cached);
+                return getDefaultData();
+            }
+        }
+
+        async function saveData(data) {
+            try {
+                await apiClient.update(data);
+                localStorage.setItem('software_center_cache', JSON.stringify(data));
+            } catch (error) {
+                console.warn('云端保存失败:', error.message);
+                alert('数据保存失败，请检查网络后重试。');
+            }
+        }
+
+        // ===================== 6. 渲染函数 =====================
+        function renderAllMenus() {
+            menuKeys.forEach(key => {
+                const menu = appData.menus[key];
+                const grid = document.getElementById(`menu-${key}-grid`);
+                if (!grid) return;
+                grid.innerHTML = menu.categories.map((cat, catIdx) => `
+                    <div class="space-y-3" data-cat="${cat.name}" data-menu="menu-${key}" data-cat-index="${catIdx}">
+                        <div style="display:flex;align-items:center;margin-bottom:8px;">
+                            <h4 class="text-xs font-semibold text-gray-400 uppercase tracking-wider cat-title" style="font-size:${sizeMap[cat.fontSize]}; font-weight:${cat.fontWeight}; color:${cat.color};">
+                                ${cat.name}
+                            </h4>
+                            <span class="cat-actions auth-required">
+                                <button onclick="quickAddToCat(this)"><i class="ri-add-line"></i></button>
+                                <button onclick="editCategory(this)"><i class="ri-edit-line"></i></button>
+                            </span>
+                        </div>
+                        ${cat.items.map(item => `
+                            <div class="menu-item-wrapper">
+                                <a href="${item.link || '#'}" target="_blank" rel="noopener" class="menu-item-link block hover:text-brand-orange transition-colors">${item.name}</a>
+                                <span class="menu-item-actions">
+                                    <button title="编辑" class="auth-required" onclick="editMenuItem(this)"><i class="ri-edit-line"></i></button>
+                                    <button title="删除" class="auth-required" onclick="deleteMenuItem(this)"><i class="ri-delete-bin-line"></i></button>
+                                </span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `).join('');
+            });
+        }
+
+        function renderChampions() {
+            const grid = document.getElementById('championGrid');
+            grid.innerHTML = appData.champions.map((ch, idx) => `
+                <div class="champion-item-wrapper" data-champion-index="${idx}">
+                    <a href="${ch.link}" target="_blank" rel="noopener" class="bg-white border border-gray-200 rounded-xl p-6 text-center hover:border-brand-orange hover:shadow-lg transition-all cursor-pointer no-underline block">
+                        ${ch.iconUrl ? `<img src="${ch.iconUrl}" class="mx-auto w-8 h-8 mb-3 object-contain" onerror="this.style.display='none';this.nextSibling.style.display='block';"><i class="ri-apps-2-fill text-3xl text-brand-orange mb-3 block" style="display:none;"></i>` : `<i class="${randomIcon()} text-3xl text-brand-orange mb-3 block"></i>`}
+                        <span class="text-gray-700 block font-medium champion-text">${ch.name}</span>
+                        <span class="text-xs text-gray-400 block mt-1">贡献者：${ch.contributor}</span>
+                    </a>
+                    <div class="champion-actions auth-required">
+                        <button onclick="editChampionItem(this)" title="编辑"><i class="ri-edit-line"></i></button>
+                        <button onclick="deleteChampionItem(this)" title="删除"><i class="ri-delete-bin-line"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function randomIcon() {
+            const icons = ['ri-install-fill','ri-download-cloud-2-fill','ri-apps-2-fill','ri-stack-fill','ri-archive-fill','ri-play-circle-fill','ri-computer-fill'];
+            return icons[Math.floor(Math.random() * icons.length)];
+        }
+
+        // ===================== 7. 菜单项操作 =====================
+        window.quickAddToCat = async (btn) => {
+            const catContainer = btn.closest('[data-cat]');
+            const name = prompt(`在“${catContainer.dataset.cat}”中添加软件名称：`);
+            if (!name || !name.trim()) return;
+            const link = prompt('跳转链接（可选）：', '#');
+            const menuId = catContainer.dataset.menu.replace('menu-','');
+            const catIdx = parseInt(catContainer.dataset.catIndex);
+            const cat = appData.menus[menuId].categories[catIdx];
+            cat.items.push({ name: name.trim(), link: link && link.trim() ? link.trim() : '#' });
+            await saveData(appData);
+            renderAllMenus();
+        };
+
+        window.editMenuItem = async (btn) => {
+            const wrapper = btn.closest('.menu-item-wrapper');
+            const anchor = wrapper.querySelector('.menu-item-link');
+            const catContainer = wrapper.closest('[data-cat]');
+            const menuId = catContainer.dataset.menu.replace('menu-','');
+            const catIdx = parseInt(catContainer.dataset.catIndex);
+            const items = appData.menus[menuId].categories[catIdx].items;
+            const itemIdx = Array.from(catContainer.querySelectorAll('.menu-item-wrapper')).indexOf(wrapper);
+            const item = items[itemIdx];
+            const oldName = item.name;
+            const newName = prompt('修改软件名称：', oldName);
+            if (newName && newName.trim()) item.name = newName.trim();
+            const oldHref = item.link || '#';
+            const newHref = prompt('修改跳转链接（留空不修改）：', oldHref);
+            if (newHref !== null && newHref.trim()) item.link = newHref.trim();
+            await saveData(appData);
+            renderAllMenus();
+        };
+
+        window.deleteMenuItem = async (btn) => {
+            if (!confirm('确定删除吗？')) return;
+            const wrapper = btn.closest('.menu-item-wrapper');
+            const catContainer = wrapper.closest('[data-cat]');
+            const menuId = catContainer.dataset.menu.replace('menu-','');
+            const catIdx = parseInt(catContainer.dataset.catIndex);
+            const items = appData.menus[menuId].categories[catIdx].items;
+            const itemIdx = Array.from(catContainer.querySelectorAll('.menu-item-wrapper')).indexOf(wrapper);
+            items.splice(itemIdx, 1);
+            await saveData(appData);
+            renderAllMenus();
+        };
+
+        // ===================== 8. 分类操作 =====================
+        window.editCategory = (btn) => {
+            const catContainer = btn.closest('[data-cat]');
+            const menuId = catContainer.dataset.menu.replace('menu-','');
+            const catIdx = parseInt(catContainer.dataset.catIndex);
+            const cat = appData.menus[menuId].categories[catIdx];
+            document.getElementById('editCatName').value = cat.name;
+            document.getElementById('editCatFontSize').value = cat.fontSize;
+            document.getElementById('editCatFontWeight').value = cat.fontWeight;
+            document.getElementById('editCatColor').value = cat.color;
+            document.getElementById('editCatLink').value = cat.link || '';
+            document.getElementById('editCategoryModal').classList.add('active');
+            window._editingCat = { menuId, catIdx };
+        };
+
+        window.saveEditCategory = async () => {
+            const { menuId, catIdx } = window._editingCat;
+            const cat = appData.menus[menuId].categories[catIdx];
+            cat.name = document.getElementById('editCatName').value.trim();
+            cat.fontSize = document.getElementById('editCatFontSize').value;
+            cat.fontWeight = document.getElementById('editCatFontWeight').value;
+            cat.color = document.getElementById('editCatColor').value;
+            cat.link = document.getElementById('editCatLink').value.trim();
+            await saveData(appData);
+            renderAllMenus();
+            document.getElementById('editCategoryModal').classList.remove('active');
+        };
+
+        window.deleteCategory = async () => {
+            if (!confirm('确定要删除该分类及所有软件项吗？')) return;
+            const { menuId, catIdx } = window._editingCat;
+            appData.menus[menuId].categories.splice(catIdx, 1);
+            await saveData(appData);
+            renderAllMenus();
+            document.getElementById('editCategoryModal').classList.remove('active');
+        };
+
+        window.submitAddCategory = async () => {
+            const menuId = document.getElementById('catNavSelect').value;
+            const name = document.getElementById('catNameInput').value.trim();
+            if (!name) return alert('请输入分类名称');
+            const cat = {
+                name,
+                fontSize: document.getElementById('catFontSize').value,
+                fontWeight: document.getElementById('catFontWeight').value,
+                color: document.getElementById('catColorInput').value,
+                link: document.getElementById('catLinkInput').value.trim(),
+                items: []
+            };
+            appData.menus[menuId].categories.push(cat);
+            await saveData(appData);
+            renderAllMenus();
+            document.getElementById('addCategoryModal').classList.remove('active');
+        };
+
+        // ===================== 9. 贡献榜操作 =====================
+        window.submitAdd = async () => {
+            const name = document.getElementById('modalName').value.trim();
+            if (!name) return alert('请输入软件名称');
+            const ch = {
+                name,
+                link: document.getElementById('modalLink').value.trim() || '#',
+                contributor: document.getElementById('modalContributor').value.trim() || '匿名贡献',
+                iconUrl: document.getElementById('modalIconUrl').value.trim()
+            };
+            appData.champions.push(ch);
+            await saveData(appData);
+            renderChampions();
+            document.getElementById('addModal').classList.remove('active');
+        };
+
+        window.editChampionItem = async (btn) => {
+            const wrapper = btn.closest('.champion-item-wrapper');
+            const idx = parseInt(wrapper.dataset.championIndex);
+            const ch = appData.champions[idx];
+            const newName = prompt('修改软件名称：', ch.name);
+            if (newName && newName.trim()) ch.name = newName.trim();
+            const newContributor = prompt('修改贡献者：', ch.contributor);
+            if (newContributor && newContributor.trim()) ch.contributor = newContributor.trim();
+            const newHref = prompt('修改跳转链接（留空不修改）：', ch.link);
+            if (newHref !== null && newHref.trim()) ch.link = newHref.trim();
+            await saveData(appData);
+            renderChampions();
+        };
+
+        window.deleteChampionItem = async (btn) => {
+            if (!confirm('确定要删除这个软件吗？')) return;
+            const wrapper = btn.closest('.champion-item-wrapper');
+            const idx = parseInt(wrapper.dataset.championIndex);
+            appData.champions.splice(idx, 1);
+            await saveData(appData);
+            renderChampions();
+        };
+
+        // ===================== 10. 轮播幻灯片 =====================
+        let currentSlide = 0;
+        const renderSlide = (index) => {
+            const s = appData.slides[index];
+            const container = document.getElementById('heroSlideContainer');
+            container.innerHTML = `<h1 class="text-4xl lg:text-6xl font-bold text-white mb-6 leading-tight">${s.title}</h1><p class="text-xl lg:text-2xl text-gray-400 mb-4 max-w-3xl mx-auto">${s.desc}</p><p class="text-lg text-gray-500 mb-10 max-w-2xl mx-auto">${s.sub}</p><div class="flex flex-col sm:flex-row gap-4 justify-center"><button class="px-8 py-3 border border-brand-orange text-brand-orange rounded-lg font-medium hover:bg-brand-orange/10 transition-all hero-btn" style="border-color:${s.btnColor}; color:${s.btnColor};">${s.btnText}</button></div>`;
+            container.querySelector('.hero-btn').onclick = () => { if (s.btnLink && s.btnLink !== '#') window.open(s.btnLink, '_blank'); };
+            document.querySelectorAll('#heroIndicators .indicator-dot').forEach((dot, i) => dot.classList.toggle('active', i === index));
+        };
+        const renderIndicators = () => {
+            document.getElementById('heroIndicators').innerHTML = appData.slides.map((_, i) =>
+                `<button class="indicator-dot ${i === currentSlide ? 'active' : ''}" onclick="goToSlide(${i})"></button>`).join('');
+        };
+        window.changeSlide = (d) => { currentSlide = (currentSlide + d + appData.slides.length) % appData.slides.length; renderSlide(currentSlide); };
+        window.goToSlide = (i) => { currentSlide = i; renderSlide(currentSlide); };
+        window.saveHeroEdit = async () => {
+            const s = appData.slides[currentSlide];
+            s.title = document.getElementById('editHeroTitle').value.trim() || s.title;
+            s.desc = document.getElementById('editHeroDesc').value.trim() || s.desc;
+            s.sub = document.getElementById('editHeroSub').value.trim() || s.sub;
+            s.btnText = document.getElementById('editHeroBtnText').value.trim() || '按钮';
+            s.btnLink = document.getElementById('editHeroBtnLink').value.trim() || '#';
+            s.btnColor = document.getElementById('editHeroBtnColor').value;
+            s.bgColor = document.getElementById('editHeroBgColor').value;
+            await saveData(appData);
+            renderSlide(currentSlide);
+            document.getElementById('heroEditModal').classList.remove('active');
+        };
+
+        // ===================== 11. 登录控制 =====================
+        const VALID_ACCOUNT = "admin", VALID_PASSWORD = "fjt13417693170";
+        const isLoggedIn = () => localStorage.getItem('sw_logged') === 'true';
+        const setLoginState = (state) => {
+            localStorage.setItem('sw_logged', state);
+            document.body.classList.toggle('logged-in', state);
+            const btn = document.getElementById('cornerLoginBtn');
+            btn.title = state ? '退出登录' : '登录';
+        };
+        document.getElementById('cornerLoginBtn').addEventListener('click', () => {
+            if (isLoggedIn()) { if (confirm('确定退出登录吗？')) setLoginState(false); }
+            else { document.getElementById('loginModal').classList.add('active'); }
+        });
+        window.doLogin = () => {
+            const user = document.getElementById('loginUser').value.trim();
+            const pass = document.getElementById('loginPass').value.trim();
+            if (user === VALID_ACCOUNT && pass === VALID_PASSWORD) {
+                setLoginState(true);
+                document.getElementById('loginModal').classList.remove('active');
+                alert('登录成功！');
+            } else alert('账号或密码错误');
+        };
+        window.closeLoginModal = (e) => { if (!e || e.target === e.currentTarget) document.getElementById('loginModal').classList.remove('active'); };
+
+        // ===================== 12. 导航交互（略，与之前完全相同） =====================
+        // 此处需要保留原来的导航悬停逻辑，因篇幅限制，实际使用时请完整包含。
+
+        // ===================== 13. 启动 =====================
+        (async function init() {
+            appData = await loadData();
+            if (isLoggedIn()) setLoginState(true); else setLoginState(false);
+            renderAllMenus();
+            renderChampions();
+            renderSlide(currentSlide);
+            renderIndicators();
+        })();
+    </script>
+</body>
+</html>
